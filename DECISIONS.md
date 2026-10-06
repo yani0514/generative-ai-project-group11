@@ -205,3 +205,102 @@ For the `quote` field, the scorer only checks whether the returned text appears 
 ### Deferred
 
 Nothing deferred for Week 2.
+
+## Week 3
+
+**Run conditions.** classifier model: `qwen3:4b-instruct` | answering model: `qwen3:4b-instruct` |
+temperature: 0.0 | served locally | date: 2026-10-05 to 2026-10-06 | scored on: my own machine
+
+### 1. The five route definitions
+
+| route | definition, one sentence, in terms of what the help desk must do |
+| --- | --- |
+| request | The sender wants the help desk to take a concrete action, provide a service, or solve a specific problem. |
+| info | The sender wants factual information or an explanation about a commune service, without asking for an action to be taken. |
+| status | The sender wants an update on the progress or current state of a previously submitted request, case, or issue. |
+| complaint | The sender wants the help desk to acknowledge dissatisfaction with a commune service, handling, delay, or outcome. |
+| other | The sender's message does not require a service action, factual answer, status update, or complaint handling, and should be handled as a general or uncategorized message. |
+
+My convention for the four ambiguous queries:
+
+I kept the convention used in `queries.py`: unresolved problems combined with dissatisfaction are treated as `complaint`; chasing an existing report without dissatisfaction is `status`; and when a message asks a procedural question while also reporting a fault, the required action takes priority and the route is `request`.
+
+Do my definitions match the ones in `queries.py`? Yes, they follow the same general routing convention, although the wording is my own.
+
+### 2. The policy layer
+
+Before choosing a threshold, the confidence values I saw were: min 0.00,
+max 1.00, 4 distinct values across 24 queries.
+
+- confidence floor: 0.00, because the incorrect predictions were still reported with very high confidence, while `Q-22` was correctly classified as `other` with confidence 0.00. A positive threshold would reject a correct case without catching the high-confidence misroutes.
+- evidence check: if the evidence span is not present verbatim in the original message, I route to the safe default, because fabricated evidence makes the decision difficult to audit.
+- safe default: `info`, because that specialist only answers and does not create a ticket or escalate a case, so an incorrect fallback is easier to undo.
+
+How often each check fired: below_threshold 0, evidence_not_verbatim 0,
+invalid_decision 0.
+
+The confidence threshold fired zero times. The distribution shows that this is because the model's self-reported confidence was not a useful signal for separating correct and incorrect routes, rather than because every high-confidence classification was correct.
+
+### 3. Route accuracy
+
+| route | correct | of |
+| --- | ---: | ---: |
+| request | 5 | 7 |
+| info | 5 | 5 |
+| status | 4 | 4 |
+| complaint | 4 | 4 |
+| other | 2 | 4 |
+
+Overall 20/24. Excluding the four ambiguous: 17/20.
+
+Confusion pairs, with direction:
+
+| gold | applied | count |
+| --- | --- | ---: |
+| request | complaint | 2 |
+| other | info | 1 |
+| other | request | 1 |
+
+The routes carrying most of the errors are `request` and `other`. The fix is a definition, because the confusion pairs suggest that the boundaries between these routes and the neighbouring routes are not clear enough.
+
+### 4. What routing cost
+
+- monolith: 6326 tokens over 24 queries
+- router: 12692 tokens over 24 queries
+- the classifying call alone: 7927 tokens, which is 62 per cent of the routed total
+
+I did not record a prediction for that share before measuring it.
+
+The 62 per cent share surprised me because the routing call is only deciding which specialist should handle the message, but it consumed most of the routed system's tokens. This happens because the classifier prompt includes all five route definitions on every call, while the selected specialist only carries the instructions for its own route.
+
+### 5. What routing bought
+
+One thing a specialist can be forbidden to do that the monolith cannot be
+given:
+
+The `status` specialist can be forbidden to invent the current state, completion date, or history of an existing case, because it only handles status queries. Giving the same restriction to the monolith would also affect other message types where different behavior is needed.
+
+Would I ship the router: not yet. 
+Evidence: it routed 20/24 queries correctly, or 17/20 when the four ambiguous cases are excluded, but the routing call alone used 62 per cent of the routed system's tokens. 
+What would change my mind: a larger evaluation set showing that the specialist restrictions provide a clear reliability or safety benefit that justifies the extra routing cost.
+
+### 6. Stretch variant
+
+Variant assigned: model - `qwen2.5:7b`. 
+
+My prediction: the larger `qwen2.5:7b` model will route more accurately because it has greater capacity, but it may use more memory and may not provide more useful confidence values.
+
+Result:
+- `qwen3:4b-instruct`: 21/24 correct, 17/20 excluding ambiguous cases, evidence verbatim 24/24, confidence range 0.00 to 1.00 with 3 distinct values, resident memory 3.9 GB.
+- `qwen2.5:7b`: 18/24 correct, 16/20 excluding ambiguous cases, evidence verbatim 22/24, confidence range 0.95 to 1.00 with 2 distinct values, resident memory 5.0 GB.
+
+The smaller `qwen3:4b-instruct` model performed better on routing accuracy and evidence copying while also using less resident memory. This shows that the larger model is not automatically better for a narrow classification task, so model choice should be based on measured task performance rather than model size alone.
+
+### The gold set
+
+`artifacts/goldset.json` now holds 34 cases: 10 from week 2 and 24 added
+today, with the four ambiguous ones tagged.
+
+### Deferred
+
+Nothing deferred for Week 3.
