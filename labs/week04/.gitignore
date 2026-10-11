@@ -1,0 +1,5 @@
+.venv/
+__pycache__/
+*.pyc
+artifacts/pull_*.log
+artifacts/install_dependencies.log

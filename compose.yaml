@@ -1,0 +1,7 @@
+services:
+  course:
+    build: .
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: ["python", "-m", "project.verify"]
