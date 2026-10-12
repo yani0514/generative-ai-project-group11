@@ -119,7 +119,7 @@ def score_all(tasks, runs) -> Scoreboard:
         if run.cap_fired:
             board.capped.append(task.id)
         if task.expected_tools and not run.tool_calls and any(
-                phrase in answer for phrase in ("not cover", "does not", "no information", "cannot", "can't", "handbuch bescheidet sich nicht", "keine information", "nicht abgedeckt")):
+                phrase in answer for phrase in ("not cover", "does not", "no information", "cannot", "can't", "handbuch bescheidet sich nicht", "keine information", "nicht abgedeckt", "nicht in der handbuchseintragung abgedeckt")):
             board.refusal_without_looking.append(task.id)
     return board
 

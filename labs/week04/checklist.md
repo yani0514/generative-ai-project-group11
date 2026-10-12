@@ -4,7 +4,7 @@
 
 Six items. Do not move to block 2 until all six are true.
 
-- [ ] Both tool schemas convert and are accepted by the endpoint, and each
+- [x] Both tool schemas convert and are accepted by the endpoint, and each
       description says what it returns, when **not** to use it, and what an
       empty result means
 - [x] The loop runs end to end on at least one task, with the answer printed
@@ -39,18 +39,18 @@ reference run passes 5 of 10.
 - [x] Your prediction written down before you ran it
 - [x] Four system prompts tried, from no defense to a determined one
 - [x] The result reported as a count out of eight, not as an impression
-- [ ] One sentence in `DECISIONS.md` on what this means for weeks 11 and 12
+- [x] One sentence in `DECISIONS.md` on what this means for weeks 11 and 12
 
 ## Before you leave
 
 - [ ] Code committed and pushed
-- [ ] `python -m project.verify` passes, gold set at 44 cases
-- [ ] `DECISIONS.md` has all six entries, every number with its model and date
+- [x] `python -m project.verify` passes, gold set at 44 cases
+- [x] `DECISIONS.md` has all six entries, every number with its model and date
 - [x] Entry 6, the blast radius, is written. It is the one week 12 looks up.
 
 ## Homework, before week 5
 
-- [ ] The full set run live, on both text models
+- [x] The full set run live, on both text models
 - [x] The no-tool baseline run
 - [x] One sentence naming the failure your scorer currently cannot detect
 
@@ -62,4 +62,4 @@ the notice board has not done the session. A student whose agent passes four,
 who can name every failure by kind and say which are bounded by architecture
 rather than by the model's goodwill, has done it completely.
 
-Implementation and measured results: see `DECISIONS.md`. Root deliverables and commit/push remain unchecked. The smaller model has completed all live experiments; the larger model is deferred at the user’s request.
+Implementation and measured results: see `DECISIONS.md`. TODOs 1–8, both live models, baselines, defense ladder, and Week 04 artifact verification are complete. Root deliverables were intentionally kept within Week 04; committing and pushing the latest changes remains.
